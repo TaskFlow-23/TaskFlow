@@ -1,0 +1,6 @@
+
+{
+  "name": "TaskFlow Ops",
+  "description": "A high-performance internal operations tool for managing work requests with strict business logic, RBAC, and automated escalation.",
+  "requestFramePermissions": []
+}
