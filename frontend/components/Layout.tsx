@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useStore, AppView } from '../store/useStore';
 import { LayoutDashboard, ListTodo, Activity, User as UserIcon, LogOut, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
