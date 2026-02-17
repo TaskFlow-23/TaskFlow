@@ -34,7 +34,7 @@ TaskFlow is a single-page application that provides an operational interface for
 
 ## Live Deployment
 
-Local: `(https://taskflow-22.netlify.app/)`
+**[→ View Live Application](https://taskflow-22.netlify.app/)**
 
 The frontend development server is started with `npm run dev` inside the frontend directory. The backend Express server runs on `http://localhost:3000`.
 
