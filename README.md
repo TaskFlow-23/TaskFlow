@@ -1,29 +1,27 @@
-# TASKFLOW - OPERATIONAL COMMAND SYSTEM
+# TaskFlow - Operational Command System
 
-A cyberpunk-themed work request management platform built with React, TypeScript,
-Zustand, and Tailwind CSS. Designed for administrators and field agents to manage,
-track, and resolve operational protocols in real time.
-
----
-
-## LIVE DEPLOYMENT
-
-Local: http://localhost:5173
-Demo credentials: admin / admin or agent / agent
+> A cyberpunk-themed work request management platform built with React, TypeScript,
+> Zustand, and Tailwind CSS. Designed for administrators and field agents to manage,
+> track, and resolve operational protocols in real time.
 
 ---
 
-## TABLE OF CONTENTS
+## Table of Contents
 
-1. Folder Structure
-2. Architecture Decisions
-3. API Choice
-4. Data Transformations
-5. Caching Strategy
-6. Design Principles Applied
-7. Known Limitations
-8. What I Would Add With More Time
-9. Setup and Running
+- [Folder Structure](#folder-structure)
+- [Overview](#overview)
+- [Live Deployment](#live-deployment)
+- [Features](#features)
+- [API Choice](#api-choice)
+- [Architecture Decisions](#architecture-decisions)
+- [Data Transformations](#data-transformations)
+- [Caching Strategy](#caching-strategy)
+- [Design Principles Applied](#design-principles-applied)
+- [Technologies](#technologies)
+- [Installation](#installation)
+- [Known Limitations](#known-limitations)
+- [What I Would Add With More Time](#what-i-would-add-with-more-time)
+- [Contributing](#contributing)
 
 ---
 
@@ -33,212 +31,263 @@ TaskFlow/
 │
 ├── backend/
 │   ├── config/
-│   │   └── db.js
+│   │   └── db.js                    MongoDB connection setup
 │   ├── middleware/
-│   │   ├── authMiddleware.js
-│   │   └── roleMiddleware.js
+│   │   ├── authMiddleware.js         JWT token verification
+│   │   └── roleMiddleware.js         Role-based route protection
 │   ├── models/
-│   │   ├── User.js
-│   │   └── WorkRequest.js
-│   ├── node_modules/
+│   │   ├── User.js                   User schema (name, role, password)
+│   │   └── WorkRequest.js            Protocol schema (all fields)
 │   ├── routes/
-│   │   ├── authRoutes.js
-│   │   └── requestRoutes.js
-│   ├── .env
+│   │   ├── authRoutes.js             POST /auth/login and /auth/register
+│   │   └── requestRoutes.js          GET, POST, PATCH, DELETE /requests
+│   ├── .env                          Environment variables (not committed)
 │   ├── package-lock.json
 │   ├── package.json
-│   └── server.js
+│   └── server.js                     Express entry point
 │
 ├── frontend/
 │   ├── components/
-│   │   ├── Dashboard.tsx
-│   │   ├── Layout.tsx
-│   │   ├── Login.tsx
-│   │   └── RequestModal.tsx
-│   ├── node_modules/
+│   │   ├── Dashboard.tsx             Card grid, filters, stats, sort
+│   │   ├── Layout.tsx                Sidebar, header, responsive shell
+│   │   ├── Login.tsx                 Auth screen with agent selector
+│   │   └── RequestModal.tsx          Create, edit, delete, comment modal
 │   ├── services/
-│   │   └── api.ts
+│   │   └── api.ts                    Mock API, localStorage, escalation
 │   ├── store/
-│   │   └── useStore.ts
+│   │   └── useStore.ts               Zustand global state store
 │   ├── .gitignore
-│   ├── App.tsx
-│   ├── constants.ts
+│   ├── App.tsx                       View routing, agent management modal
+│   ├── constants.ts                  Agent list, color maps, cache TTL
 │   ├── eslint.config.js
-│   ├── index.html
-│   ├── index.tsx
-│   ├── metadata.json
+│   ├── index.html                    HTML entry point
+│   ├── index.tsx                     React bootstrap
+│   ├── metadata.json                 Application metadata
 │   ├── package-lock.json
 │   ├── package.json
-│   ├── README.md
-│   ├── testing_notes.md
+│   ├── README.md                     Frontend-specific documentation
+│   ├── testing_notes.md              Manual testing observations
 │   ├── tsconfig.json
-│   ├── types.ts
-│   └── vite.config.js
+│   ├── types.ts                      TypeScript enums and interfaces
+│   └── vite.config.js                Vite configuration
 │
-└── README.md
+└── README.md                         This file
+
 
 ---
 
-## ARCHITECTURE DECISIONS
+## OVERVIEW
 
-TaskFlow follows a layered frontend architecture with clear separation of concerns.
+TaskFlow is a single-page application that provides an operational interface for
+creating, assigning, tracking, and resolving work request protocols. The application
+features a distinctive cyberpunk aesthetic built on deep black, neon blue, and stark
+white, with role-based access control separating administrator and field agent
+experiences.
 
-FRONTEND LAYER RESPONSIBILITIES
+---
 
-components/Dashboard.tsx
-    Admin and agent scoped view with filters and stats cards
+## LIVE DEPLOYMENT
 
-components/RequestModal.tsx
-    Create, edit, and delete protocol modal with comments
+Local Frontend:   http://localhost:5173
+Local Backend:    http://localhost:3000
 
-components/Login.tsx
-    Auth screen with agent selection dropdown
+The frontend development server is started with npm run dev inside the frontend
+directory. The backend Express server is started with node server.js inside the
+backend directory.
 
-components/Layout.tsx
-    Collapsible sidebar and responsive shell
+---
 
-store/useStore.ts
-    Global state via Zustand, single source of truth
-
-services/api.ts
-    Mock API layer backed by localStorage
-
-types.ts
-    Shared TypeScript interfaces and enums
-
-constants.ts
-    Color maps, agent list, cache config
-
-App.tsx
-    View routing and admin agent management modal
-
-BACKEND LAYER RESPONSIBILITIES
-
-server.js
-    Express entry point, middleware registration, route mounting
-
-config/db.js
-    MongoDB connection via Mongoose
-
-models/User.js
-    User schema with role field (Admin or Agent)
-
-models/WorkRequest.js
-    Work request schema with priority, status, dueDate, comments
-
-middleware/authMiddleware.js
-    JWT token verification on protected routes
-
-middleware/roleMiddleware.js
-    Role-based access control, restricts routes by user role
-
-routes/authRoutes.js
-    POST /auth/login, POST /auth/register
-
-routes/requestRoutes.js
-    GET, POST, PATCH, DELETE for work request resources
+## FEATURES
 
 
-KEY DECISIONS
+CORE FUNCTIONALITY
 
-Decision                          Rationale
-------------------------------------------------------------------------
-Zustand over Redux                Minimal boilerplate, direct selector
-                                  subscriptions, no provider wrappers needed
+Protocol Management:
+    Create, read, update, and delete work request protocols with full
+    audit trail via comment threads.
 
-localStorage as database          Eliminates backend dependency, persists
-                                  across sessions, perfect for demo scope
+Role-Based Access Control:
+    Administrators access all protocols globally while agents see only
+    their assigned work.
 
-Component-level modals            Modals rendered at root level with fixed
-                                  positioning and high z-index to avoid
-                                  sidebar overlap
+Agent Login Selection:
+    Agents choose their specific ID from a dropdown at login from
+    AGT-101 through AGT-110.
 
-Tailwind CSS                      Utility-first approach enables rapid,
-                                  consistent, responsive styling without
-                                  separate CSS files
+Admin Agent Registration:
+    Administrators register new agents directly from the dashboard
+    without touching code.
 
-Role-Based Access Control         Admin vs Agent permissions enforced at
-                                  both the UI layer and the service layer
+Search and Filter:
+    Real-time search by title, ID, description, agent, and tags with
+    multi-select status, priority, and agent filters.
 
-Optimistic UI updates             State updates immediately on action with
-                                  rollback on error for a snappy experience
+Overdue Escalation:
+    Protocols overdue by more than 7 days are automatically escalated
+    to CRITICAL priority with a system comment appended.
 
-Single-file component pattern     Related logic, state, and JSX colocated
-                                  for easier maintainability
+Sort Controls:
+    Sort by last updated, priority level, or due date with a one-click
+    ascending and descending toggle.
+
+Comment Threads:
+    Three-tier comment system with general notes, status updates, and
+    system-generated escalation logs rendered with distinct visual
+    treatment.
+
+
+ADVANCED FEATURES
+
+Auto-Escalation Engine:
+    Runs on every data fetch, dynamically setting isOverdue flags and
+    escalating priority based on real-time date comparison.
+
+Stats Dashboard:
+    Live calculation of total protocols, completion rate, and overdue
+    count scoped to the current user role.
+
+Responsive Design:
+    Fully responsive interface with collapsible sidebar on desktop and
+    hamburger navigation on mobile.
+
+Persistent Storage:
+    All protocol data stored in localStorage with schema versioning
+    and migration support.
 
 ---
 
 ## API CHOICE
 
-TaskFlow uses a custom mock API service (services/api.ts) backed by localStorage
+
+WHY A CUSTOM MOCK API
+
+TaskFlow uses a custom API service (services/api.ts) backed by localStorage
 rather than a live external API. This was a deliberate architectural choice.
 
+Zero Backend Dependency:
+    The frontend runs fully offline in any environment without requiring
+    a running database or live server. The application is instantly
+    runnable after a single npm install and npm run dev with no
+    environment configuration required.
 
-WHY A MOCK API
+Realistic Simulation:
+    All operations behave identically to real async API calls. Every
+    method returns a Promise with a simulated network delay using
+    setTimeout, meaning loading states, error boundaries, and success
+    flows are all exercised exactly as they would be against a real
+    endpoint.
 
-Zero backend dependency
-    The app runs fully offline in any environment
+Controlled Seed Data:
+    Predefined protocols with realistic February 2026 dates allow
+    meaningful demo scenarios. Priority escalation, overdue detection,
+    and RBAC filtering all behave correctly against this seeded dataset
+    out of the box.
 
-Persistent demo data
-    Data survives page refreshes without a server
-
-Realistic simulation
-    All operations (create, read, update, delete) behave identically to real
-    async API calls using Promise and setTimeout
-
-Controlled seed data
-    Predefined protocols with realistic 2026 dates allow meaningful demo scenarios
+Fully Swappable:
+    The mock service is designed to be replaced. Swapping services/api.ts
+    for an Axios or fetch client targeting the Express backend requires
+    no changes to the Zustand store interface or any component.
 
 
-API SERVICE STRUCTURE
+MOCK API SERVICE STRUCTURE
 
     getWorkRequests()
-        GET all protocols with escalation check
+        GET all protocols with auto-escalation check applied
 
-    createWorkRequest(data)
-        POST new protocol
+    createWorkRequest(data, user)
+        POST new protocol with ownership and defaults applied
 
-    updateWorkRequest(id, data)
-        PATCH protocol with RBAC enforced
+    updateWorkRequest(id, updates, user)
+        PATCH protocol with RBAC field validation enforced
 
-    deleteWorkRequest(id)
-        DELETE admin only
+    deleteWorkRequest(id, user)
+        DELETE admin only, throws on non-admin caller
 
-    addComment(id, content)
-        POST comment to protocol thread
-
-
-ESCALATION ENGINE
-
-On every getWorkRequests() call, the service runs an auto-escalation check:
-
-    - Any protocol overdue by more than 7 days is automatically escalated
-      to CRITICAL priority
-    - A system-generated comment is appended to the protocol thread
-      documenting the escalation
-    - The isOverdue flag is set or unset dynamically based on current
-      date vs due date
+    addComment(requestId, content, type, user)
+        POST comment to protocol thread with access check
 
 
-IF REPLACING WITH A REAL API
+BACKEND ROUTES (EXPRESS)
 
-The mock service is fully swappable. Replace services/api.ts with any HTTP
-client such as Axios, fetch, or React Query targeting a REST or GraphQL
-endpoint. The Zustand store interface remains identical. Only the data
-source changes.
+    POST   /auth/register      Create a new user account
+    POST   /auth/login         Authenticate and receive JWT token
+    GET    /requests           Fetch all visible protocols
+    POST   /requests           Create a new protocol
+    PATCH  /requests/:id       Update an existing protocol
+    DELETE /requests/:id       Delete a protocol (Admin only)
+
+---
+
+## ARCHITECTURE DECISIONS
+
+
+1. ZUSTAND OVER REDUX
+
+Zustand was chosen for global state management because it requires zero
+boilerplate. There are no actions, reducers, or provider wrappers.
+Components subscribe directly to slices of state via selector functions
+and re-render only when that specific slice changes.
+
+    const currentUser = useStore((state) => state.currentUser);
+    const fetchRequests = useStore((state) => state.fetchRequests);
+
+
+2. LOCALSTORAGE AS THE PERSISTENT LAYER
+
+All protocol data is written to and read from localStorage via the mock
+API service. A versioned schema object wraps the array:
+
+    { version: 1, requests: WorkRequest[] }
+
+On every read, the version is checked and migrateData() runs field
+backfills if the stored schema is outdated. Data created in earlier
+sessions continues to work after code updates.
+
+
+3. FIXED-POSITION MODALS WITH HIGH Z-INDEX
+
+The RequestModal renders as a fixed full-screen overlay at z-index 200.
+The sidebar sits at z-index 95. This ensures the modal always appears
+above the sidebar regardless of scroll position or layout, fixing the
+visual overlap issue visible in earlier versions.
+
+
+4. ROLE-BASED ACCESS CONTROL AT TWO LAYERS
+
+Permissions are enforced twice. First at the UI layer, where fields are
+conditionally disabled and buttons are conditionally hidden based on
+currentUser.role. Second at the service layer, where updateWorkRequest
+and deleteWorkRequest throw descriptive errors if the caller lacks the
+required role. This prevents bypass via console manipulation.
+
+
+5. STANDALONE REACT COMPONENTS
+
+Each component file contains all related logic, state, and JSX in a
+single file. No separate container and presentational component split
+is used. This reduces file count and keeps the mental model simple for
+a project of this scope.
+
+
+6. TAILWIND CSS UTILITY-FIRST STYLING
+
+Tailwind was chosen over a component library or custom CSS architecture.
+All visual tokens such as spacing, radius, opacity, and color are drawn
+from the Tailwind scale, ensuring consistency without a design system
+overhead. Responsive variants (sm:, md:, lg:, xl:) handle all breakpoints
+inline.
 
 ---
 
 ## DATA TRANSFORMATIONS
 
-Several transformation layers exist between raw data and the displayed UI.
-
 
 1. PRIORITY ESCALATION TRANSFORM
 
     Raw stored priority:    Priority.HIGH
-    After escalation check  (more than 7 days overdue)
-    Transformed to:         Priority.CRITICAL + system comment appended
+    Condition:              isOverdue is true AND diffDays is greater than 7
+    Transformed to:         Priority.CRITICAL
+    Side effect:            System comment appended to protocol thread
 
 
 2. DATE NORMALIZATION
@@ -256,114 +305,106 @@ Several transformation layers exist between raw data and the displayed UI.
         Output: "Feb 14"
 
 
-3. AGENT LIST - DYNAMIC VS STATIC
+3. AGENT LIST MERGING
 
-    Default agents are seeded from constants.ts.
-    Runtime additions are stored in localStorage under 'authorized_agents'.
-    The getAuthorizedAgents() function merges both sources:
+    Default agents from constants.ts are merged with runtime additions
+    stored in localStorage:
 
         getAuthorizedAgents(): string[] {
             const stored = localStorage.getItem('authorized_agents');
             return stored ? JSON.parse(stored) : DEFAULT_AGENTS;
         }
 
+    New agents registered by an admin appear immediately in the
+    assignment dropdown, the login agent selector, and the agent filter
+    without a page reload.
+
 
 4. RBAC FIELD FILTERING
 
-    Agent users receive a filtered update payload:
-        Blocked:    assignedAgent, createdBy, dueDate
-        Permitted:  status, comments
-
-    Admin users receive full update access with no restrictions.
+    Fields blocked for Agent role:   assignedAgent, createdBy, dueDate
+    Fields permitted for Agent role: status, comments
+    Fields permitted for Admin role: all fields
 
 
 5. COMMENT TYPE CLASSIFICATION
 
-    CommentType.GENERAL
-        Blue border - user-authored notes
-
-    CommentType.STATUS_UPDATE
-        Yellow border - lifecycle transitions
-
-    CommentType.SYSTEM_GENERATED
-        Red border - automated escalation logs
+    CommentType.GENERAL           Blue border   - user-authored notes
+    CommentType.STATUS_UPDATE     Yellow border - lifecycle transitions
+    CommentType.SYSTEM_GENERATED  Red border    - auto-escalation records
 
 
-6. SEARCH AND FILTER PIPELINE (DASHBOARD)
+6. SEARCH AND FILTER PIPELINE
 
-    Raw requests
-        -> Role scope filter     (admin: all | agent: assigned only)
-        -> Text search           (title, id, description, agent, tags)
-        -> Status filter         (multi-select)
-        -> Priority filter       (multi-select)
-        -> Agent filter          (admin only, multi-select)
-        -> Overdue toggle
-        -> Sort                  (lastUpdated | priority | dueDate)
-                                 x (ascending | descending)
-        -> Rendered grid
+    Raw protocol array
+        -> Role scope filter     admin sees all | agent sees assigned only
+        -> Text search           title, id, description, agent, tags
+        -> Status filter         multi-select OR condition
+        -> Priority filter       multi-select OR condition
+        -> Agent filter          multi-select OR condition, admin only
+        -> Overdue toggle        isOverdue === true
+        -> Sort                  lastUpdated | priority | dueDate
+                                 x ascending | descending
+        -> Rendered card grid
 
 ---
 
 ## CACHING STRATEGY
 
-TaskFlow implements a time-based in-memory cache with localStorage as the
-persistent backing store.
+
+LAYER 1 - IN-MEMORY ZUSTAND CACHE (SESSION)
+
+Once protocols are fetched and stored in the Zustand requests array,
+they remain in memory for the lifetime of the browser session. A
+lastFetched timestamp guards against redundant fetches:
+
+    fetchRequests: async (force = false) => {
+        const { lastFetched } = get();
+        const now = Date.now();
+
+        if (!force && lastFetched && now - lastFetched < CACHE_TIME) {
+            return;
+        }
+        // Proceed with fetch...
+    }
+
+Trade-off: Cleared on page refresh. Does not persist across sessions
+at the Zustand level, only at the localStorage level.
 
 
-CACHE LAYERS
+LAYER 2 - LOCALSTORAGE (PERSISTENT)
 
-    Zustand store
-        Mechanism:  In-memory signal
-        TTL:        Session lifetime
-        Purpose:    Prevents redundant fetches within a session
+The mock API service reads from and writes to localStorage on every
+operation. Protocol data survives page refreshes, browser restarts,
+and tab closures:
 
-    localStorage
-        Mechanism:  Browser storage
-        TTL:        Permanent
-        Purpose:    Persists data across page refreshes
+    private getFromStorage(): WorkRequest[] {
+        const raw = localStorage.getItem(this.storageKey);
+        if (!raw) return [];
+        const data = JSON.parse(raw);
+        return data.requests || [];
+    }
 
-    Fetch guard
-        Mechanism:  lastFetched timestamp
-        TTL:        5 minutes
-        Purpose:    Prevents refetch if data is fresh
-
-
-CACHE FLOW
-
-    fetchRequests(force = false)
-        |
-        |-- force is false AND lastFetched is within 5 minutes
-        |       Skip fetch, use existing Zustand state
-        |
-        └── force is true OR cache is stale
-                Set isLoading to true
-                Call apiService.getWorkRequests()
-                apiService reads from localStorage
-                Runs escalation check and mutates if needed
-                Returns fresh data and updates Zustand state
+Trade-off: Cleared when the user wipes browser data. Device-specific.
+Not shared across tabs in real time.
 
 
 CACHE INVALIDATION
 
-    The cache is force-refreshed after:
-        - Creating a new protocol
-        - Updating an existing protocol
-        - Deleting a protocol
-        - Manual refresh button click
-        - User login
+The lastFetched timestamp is set to null after every mutation, forcing
+the next fetchRequests call to bypass the in-memory cache and re-read
+from localStorage:
 
-    After any mutation:
-        set({ lastFetched: null })
-        This forces the next fetchRequests() call to bypass the cache.
+    // After create, update, or delete:
+    set({ lastFetched: null })
 
 
-VERSION MIGRATION
+SUMMARY
 
-    The localStorage schema includes a version key:
-        { version: 1, requests: WorkRequest[] }
-
-    On version mismatch, migrateData() runs field backfills before
-    returning data.
+    Layer             Scope    Duration          What It Caches
+    -----------------------------------------------------------
+    Zustand store     Session  Until refresh     All loaded protocols
+    localStorage      Device   Permanent         All protocol data
 
 ---
 
@@ -374,35 +415,38 @@ VERSION MIGRATION
 
 How it was applied:
 
-TaskFlow uses a strict visual hierarchy built on three colors only.
-Deep Black (#000000), Neon Blue (#00E5FF), and Stark White (#FFFFFF).
-Every element's importance is communicated through opacity, size, and
-color saturation rather than decorative noise. Critical information
-surfaces immediately. Secondary metadata recedes into lower-opacity text.
-Labels are written in uppercase to reinforce the information tier they
-belong to.
+TaskFlow uses a strict three-color visual hierarchy. Deep Black (#000000),
+Neon Blue (#00E5FF), and Stark White (#FFFFFF). Every element's importance
+is communicated through opacity, size, and color saturation rather than
+decorative noise. Critical information surfaces immediately. Secondary
+metadata recedes into lower-opacity text.
 
-Concrete UI example - Dashboard Request Cards:
+Concrete example - Dashboard Request Cards:
 
-    [TR-2026-04]              [BLOCKED]
-        Identity and state at the top, highest contrast
+Each card follows a strict top-to-bottom importance hierarchy:
+
+    [TR-2026-04]                         [BLOCKED]
+        Protocol ID and status badge at the top, highest contrast
 
     EMERGENCY DB RECOVERY PROTOCOL
-        Title below, large bold white text
+        Title below, large bold uppercase white text
 
     [IT]  [Urgent]  [Database]
         Tags below title, muted and small
 
     "Restore corrupted index in production cluster..."
-        Description below tags, dimmed opacity
+        Description below tags, dimmed to 30% opacity
 
     ---------------------------------------------------
 
-    [AGT-109]                    Due: Feb 14
-        Personnel and deadline, dimmest layer
+    [AGT-109]                         Due: Feb 14
+        Personnel and deadline, lowest opacity layer
 
     (red dot)  CRITICAL
-        Priority indicator, color-coded dot
+        Priority dot, color-coded with pulse animation on critical
+
+Users never need to hunt for key information. The card communicates
+identity, urgency, and assignment in under two seconds of scanning.
 
 
 2. CONSISTENCY - REUSABLE PATTERNS AND BEHAVIORS
@@ -410,73 +454,52 @@ Concrete UI example - Dashboard Request Cards:
 How it was applied:
 
 All interactive elements follow an identical behavioral contract
-throughout the entire application.
+throughout the entire application without exception.
 
-    Hover state:    subtle border shift to neon-blue/30
-    Active press:   scale-95 transform
-    Disabled state: opacity-30
-
-This contract is never broken across any button, card, dropdown,
-or input in the system.
+    Hover state:     border shifts to neon-blue/30
+    Active press:    scale-95 transform
+    Disabled state:  opacity-30
+    Focus state:     neon-blue ring
 
 Custom components are built once and reused everywhere:
-    CheckboxDropdown
-    CheckboxSelect
-    SortDropdown
-    ConfirmationModal
 
-Typography scale, border-radius tokens, and spacing increments are
-drawn from the same Tailwind scale throughout every screen.
+    CheckboxDropdown    Used for Status, Priority, and Agent filters
+    CheckboxSelect      Used for Priority and Status in the modal
+    SortDropdown        Sort field selector with direction toggle
+    ConfirmationModal   Reused for delete confirmation
 
-Concrete UI example - Filter Dropdowns on the Dashboard:
+Concrete example - Filter Dropdowns on the Dashboard:
 
 The Status, Priority, and Agent filters all use the identical
 CheckboxDropdown component. A user who learns to use the Status filter
-immediately knows how to operate the Priority and Agent filters without
-any additional learning. They share the same open and close behavior,
-the same checkmark rendering, the same Clear Selection footer, and the
-same z-index stacking behavior.
+immediately knows how to operate the Priority and Agent filters with
+zero additional learning. Same open and close animation, same checkmark
+rendering, same Clear Selection footer, same z-index stacking.
 
 
 3. FEEDBACK - COMMUNICATING SYSTEM STATE
 
 How it was applied:
 
-TaskFlow implements a feedback system covering every possible state a
-user might encounter during their session.
+TaskFlow covers every possible state a user might encounter with an
+explicit visual response. No state is silent.
 
-    Loading
-        Shimmer skeleton cards, 6 animated placeholders
+    Loading       Shimmer skeleton cards with 6 animated placeholders
+    Empty         Icon, contextual message, clear-filters call to action
+    Error         Red error panel with retry button
+    Success       Green toast, bottom-right, auto-dismisses after 4s
+    Failure       Red toast with exact error message from service layer
+    Processing    Button becomes disabled and shows "Processing..."
+    Overdue       Red border on card and pulsing Escalated badge
+    Refreshing    Spinning icon on the refresh button
 
-    Empty
-        Contextual icon and message with clear-filters call to action
-
-    Error
-        Red-themed error panel with a retry button
-
-    Success
-        Green toast notification, bottom-right, auto-dismisses after 4s
-
-    Failure
-        Red toast notification with the exact error message
-
-    Processing
-        Button text changes to "Processing..." and becomes disabled
-
-    Overdue
-        Red border on card and a pulsing Escalated badge
-
-    Refreshing
-        Spinning RefreshCw icon on the refresh button
-
-Concrete UI example - Request Modal submission:
+Concrete example - Request Modal submission:
 
 When an admin clicks Sync Changes, the button immediately becomes
-disabled and displays "Processing..." to prevent double-submission.
-On success, a green toast slides up from the bottom reading
-"Changes synchronized successfully".
-On failure, a red toast displays the exact error message from the
-service layer. The user always knows what happened and why.
+disabled and displays "Processing..." to block double-submission. On
+success, a green toast slides up reading "Changes synchronized
+successfully". On failure, a red toast shows the exact service error.
+The user always knows what happened and why.
 
 
 4. ACCESSIBILITY - SUPPORTING DIVERSE USERS
@@ -485,40 +508,39 @@ How it was applied:
 
 Keyboard navigation:
     All interactive elements are native button or input elements,
-    ensuring full tab-order traversal without custom keyboard handlers.
-    No div-based click traps exist in the codebase.
+    ensuring full tab-order traversal. No div-based click traps
+    exist anywhere in the codebase.
 
 Color contrast:
     Neon Blue (#00E5FF) on Deep Black (#000000) achieves a contrast
-    ratio of approximately 12:1, exceeding both WCAG AA (4.5:1) and
-    AAA (7:1) standards for normal text.
+    ratio of approximately 12:1, exceeding WCAG AA (4.5:1) and
+    AAA (7:1) for normal text.
 
 Semantic HTML:
-    The header, nav, aside, main, section, and table elements are used
-    throughout Layout, Dashboard, and Work Queue views, providing
-    meaningful document structure for screen readers.
+    header, nav, aside, main, section, and table elements are used
+    throughout every view, providing meaningful document structure
+    for screen readers.
 
 Title attributes:
-    Icon-only buttons such as collapse sidebar, refresh, and sort
-    direction toggle include title props so screen reader users receive
-    the full label even when text is visually hidden.
+    Icon-only buttons include title props so screen reader users
+    receive the full label when visible text is hidden.
 
 Disabled states:
-    Form controls that are not editable by the current role are
-    genuinely disabled at the HTML level, not just visually styled.
-    This prevents interaction via keyboard or assistive technology.
+    Form controls locked by RBAC are genuinely disabled at the HTML
+    level, not just styled. Keyboard and assistive technology
+    interaction is blocked at the element level.
 
 Responsive design:
-    Mobile users receive a hamburger-menu sidebar, a single-column
-    card grid, and a full-screen modal, ensuring the application is
-    fully usable on any device and viewport.
+    Mobile users receive a hamburger sidebar, single-column card
+    grid, and full-screen modal. No functionality is lost on
+    any viewport.
 
-Concrete UI example - Collapsible Sidebar:
+Concrete example - Collapsible Sidebar:
 
 When the sidebar collapses to icon-only mode, each navigation button
-retains its title attribute with the full label. Screen readers and
-keyboard users still receive the complete label (Dashboard, Work Queue,
-Analytics) even though the visible text is hidden from sighted users.
+retains its title attribute. Screen readers receive the full label
+(Dashboard, Work Queue, Analytics) even when the text is visually
+hidden from sighted users.
 
 
 5. EFFICIENCY - COMPLETING TASKS WITH MINIMAL FRICTION
@@ -526,177 +548,67 @@ Analytics) even though the visible text is hidden from sighted users.
 How it was applied:
 
 Every workflow is optimized for the minimum number of interactions
-required to complete a meaningful action.
+required.
 
 One-click new protocol:
     The Initialize Protocol button is always visible in the dashboard
-    header and is never buried inside a submenu or secondary screen.
+    header, never buried in a submenu.
 
 Inline status updates:
-    Agents can change a protocol's status directly inside the detail
-    modal without navigating away from their current context.
+    Agents update protocol status directly inside the modal without
+    navigating away.
 
 Persistent filters:
-    Filter state is maintained within the session so users do not need
-    to re-apply filters after opening and closing a request modal.
+    Filter state survives opening and closing modals within a session.
+    Users never need to re-apply filters.
 
-Sort and direction toggle:
-    A single arrow button toggles ascending and descending order
-    without requiring the user to open a dropdown, saving one click
-    per sort reversal.
+Sort direction toggle:
+    A single arrow button reverses sort order without opening a
+    dropdown.
 
 Agent pre-selection at login:
-    Agents select their ID at the login screen so the dashboard
-    immediately shows only their assigned protocols. No additional
-    filtering is required after login.
+    Agents select their ID at login. The dashboard immediately shows
+    only their protocols with no post-login filtering required.
 
 Debounced search:
-    A 300ms debounce on the search input prevents unnecessary processing
-    while keeping results near-instant for the user.
+    300ms debounce prevents unnecessary processing while keeping
+    results near-instant.
 
-Force refresh without reload:
-    A single click on the refresh button force-fetches all data without
-    requiring a full browser page reload.
+Concrete example - Sort Direction Toggle:
 
-Concrete UI example - Sort Direction Toggle:
-
-The up/down arrow button beside the Sort By dropdown lets users reverse
-their current sort order in a single click. Without this control,
-reversing sort would require opening the dropdown, selecting a different
-field, and then re-selecting the original field. That is three clicks
-instead of one.
+The arrow button beside Sort By reverses sort in one click. Without
+it, reversing sort requires opening the dropdown, selecting a different
+field, then re-selecting the original. That is three clicks reduced
+to one.
 
 ---
 
-## KNOWN LIMITATIONS
+## TECHNOLOGIES
 
-No real backend:
-    All data lives in localStorage and is cleared on browser data wipe.
 
-No real authentication:
-    Credentials (admin/admin, agent/agent) are hardcoded demo values
-    with no token or session management.
+FRONTEND STACK
 
-No multi-tab sync:
-    Changes made in one browser tab do not propagate to another open
-    tab in real time.
+    React             18          UI component framework
+    TypeScript        5           Type safety across all files
+    Zustand           4           Global state management
+    Tailwind CSS      3           Utility-first styling system
+    Lucide React      Latest      Consistent icon system
+    Vite              5           Build tool and development server
+    localStorage      Browser     Persistent mock database
 
-No file attachments:
-    Protocol threads support text comments only. No document or image
-    uploads are supported.
 
-No email or push notifications:
-    Escalation events are logged in-system only. No external
-    notification delivery exists.
+BACKEND STACK
 
-No pagination in Work Queue:
-    The Work Queue table renders all visible protocols without
-    pagination or virtual scrolling.
-
-Agent format constraint:
-    New agents registered via the admin panel must follow the AGT-XXX
-    format with exactly 3 digits.
-
-First-load data seed:
-    If localStorage already contains old schema data, a migration runs
-    but may miss edge cases in heavily modified datasets.
-
-No offline PWA support:
-    The application requires a running dev server and has no service
-    worker for offline use.
-
-Search scope limited:
-    Dashboard search covers title, ID, description, agent, and tags
-    but does not search comment content.
+    Node.js           18+         Runtime environment
+    Express           4.18        HTTP server and static file serving
+    MongoDB           Latest      Database
+    Mongoose          Latest      ODM for schema modeling
+    JSON Web Token    Latest      Authentication tokens
+    bcrypt            Latest      Password hashing
 
 ---
 
-## WHAT I WOULD ADD WITH MORE TIME
-
-
-HIGH PRIORITY
-
-Real backend using Node.js, Express, and PostgreSQL:
-    Replace the mock API with persistent server-side storage and real
-    JWT authentication including token refresh and session management.
-
-Real-time updates via WebSockets:
-    Live protocol updates across all connected users via Socket.io so
-    that when an admin assigns a protocol, the assigned agent sees it
-    immediately.
-
-Email notifications:
-    Nodemailer integration for deadline reminders, escalation alerts,
-    and assignment notifications delivered directly to agent inboxes.
-
-
-FEATURE ADDITIONS
-
-File attachments on protocols:
-    Allow agents and admins to upload supporting documents such as
-    PDFs, images, and logs directly to protocol threads.
-
-Advanced analytics with charts:
-    Recharts or Chart.js integration showing protocol volume over time,
-    agent performance metrics, average resolution times, and SLA
-    compliance rates.
-
-Protocol templates:
-    Predefined protocol types such as Security Audit, DB Recovery, and
-    Infrastructure Maintenance that pre-fill common fields to reduce
-    data entry time.
-
-Bulk operations:
-    Select multiple protocols for bulk status changes, bulk assignment,
-    or bulk export without opening each one individually.
-
-Full audit trail:
-    An immutable append-only log of every change made to every protocol,
-    including who changed what field, from what value, to what value,
-    and when.
-
-Dark and light mode toggle:
-    Currently dark-only. A light mode variant would improve
-    accessibility for users in brightly lit environments.
-
-CSV and PDF export:
-    Export the currently filtered protocol list as a CSV for
-    spreadsheet import or as a formatted PDF for reporting.
-
-
-TECHNICAL IMPROVEMENTS
-
-React Query / TanStack Query:
-    Replace the manual caching implementation with battle-tested server
-    state management that handles stale-while-revalidate, background
-    refetching, and optimistic updates automatically.
-
-End-to-end testing with Playwright:
-    Full user journey tests covering critical admin workflows such as
-    create, assign, escalate, and delete, as well as agent workflows
-    such as view, update status, and comment.
-
-Unit testing with Vitest:
-    Coverage of the Zustand store logic, the escalation engine, and
-    the multi-step filter and sort pipeline in Dashboard.
-
-Progressive Web App with Service Worker:
-    Offline capability and an installable app experience so field
-    agents can access their assigned protocols without a network
-    connection.
-
-Internationalization with react-i18next:
-    Multi-language support to make the platform accessible to teams
-    operating across different regions and language preferences.
-
-Formal WCAG 2.1 AA accessibility audit:
-    Screen reader testing with NVDA and VoiceOver, automated axe-core
-    scanning, and manual keyboard-only navigation testing across all
-    views.
-
----
-
-## SETUP AND RUNNING
+## INSTALLATION
 
 
 PREREQUISITES
@@ -706,22 +618,30 @@ PREREQUISITES
     MongoDB (for backend)
 
 
-INSTALLATION - FRONTEND
+QUICK START - FRONTEND ONLY
 
-    cd frontend
+    git clone <your-repo-url>
+    cd TaskFlow/frontend
     npm install
     npm run dev
 
-    Runs on http://localhost:5173
+    Open http://localhost:5173
+    Log in with admin / admin or agent / agent
 
 
-INSTALLATION - BACKEND
+FULL STACK SETUP
 
-    cd backend
-    npm install
-    node server.js
+    Terminal 1 - Backend
+        cd TaskFlow/backend
+        npm install
+        node server.js
+        Runs on http://localhost:3000
 
-    Runs on http://localhost:3000
+    Terminal 2 - Frontend
+        cd TaskFlow/frontend
+        npm install
+        npm run dev
+        Runs on http://localhost:5173
 
 
 DEMO CREDENTIALS
@@ -729,101 +649,144 @@ DEMO CREDENTIALS
     Administrator
         Username:  admin
         Password:  admin
-        Access:    Full access, all protocols, delete, assign
+        Access:    Full access, all protocols, delete, assign agents
 
     Field Agent
         Username:  agent
         Password:  agent
-        Access:    Scoped, own protocols only, status updates
+        Access:    Scoped to assigned protocols, status updates only
+        Note:      Select agent ID from dropdown (AGT-101 to AGT-110)
 
-    When logging in as Agent, select any of the 10 agent IDs from
-    the dropdown (AGT-101 through AGT-110).
+---
 
+## KNOWN LIMITATIONS
 
-TECH STACK
+No real authentication:
+    Credentials are hardcoded demo values. There is no JWT token
+    issuance, session management, or token refresh on the frontend.
 
-    Frontend
-        React 18              UI framework
-        TypeScript 5          Type safety across all components
-        Zustand 4             Global state management
-        Tailwind CSS 3        Utility-first styling system
-        Lucide React          Icon system throughout the UI
-        Vite 5                Build tool and development server
-        localStorage          Persistent mock database
+No multi-tab sync:
+    Changes in one browser tab do not propagate to another open tab
+    in real time. Each tab maintains its own Zustand state.
 
-    Backend
-        Node.js               Runtime environment
-        Express               HTTP server and routing
-        MongoDB               Database
-        Mongoose              ODM for schema modeling
-        JSON Web Token        Authentication
-        bcrypt                Password hashing
+No file attachments:
+    Protocol threads support text comments only. No document, image,
+    or log file uploads are supported.
 
+No email or push notifications:
+    Escalation events are recorded as in-system comments only. No
+    external delivery channel exists.
 
-FILE REFERENCE - FRONTEND
+No pagination in Work Queue:
+    The Work Queue table renders all visible protocols without
+    pagination or virtual scrolling. Large datasets will render
+    long tables.
 
-    App.tsx
-        Root component, view routing, agent management modal
+Agent format constraint:
+    New agents registered via the admin panel must follow the AGT-XXX
+    format with exactly three digits.
 
-    components/Layout.tsx
-        Responsive sidebar shell, collapsible nav, header
+Search scope limited:
+    The dashboard search covers title, ID, description, agent, and
+    tags. Comment content is not searchable.
 
-    components/Dashboard.tsx
-        Request cards grid, filters, stats, sort controls
+No offline support:
+    The application requires a running dev server. No service worker
+    or offline cache exists.
 
-    components/RequestModal.tsx
-        Protocol create, edit, delete modal with comments
+---
 
-    components/Login.tsx
-        Auth screen with agent selector dropdown
-
-    store/useStore.ts
-        Zustand store, all global state and async actions
-
-    services/api.ts
-        Mock API, localStorage CRUD and escalation engine
-
-    constants.ts
-        Agent list, color maps, cache TTL configuration
-
-    types.ts
-        TypeScript enums and interfaces
-
-    index.html
-        HTML entry point
-
-    vite.config.js
-        Vite build configuration
+## WHAT I WOULD ADD WITH MORE TIME
 
 
-FILE REFERENCE - BACKEND
+HIGH PRIORITY
 
-    server.js
-        Express entry point, middleware and route registration
+Real backend integration:
+    Connect the frontend to the Express and MongoDB backend already
+    scaffolded in the repository. Implement real JWT authentication
+    with token storage, refresh, and protected route guards.
 
-    config/db.js
-        MongoDB connection configuration
+Real-time updates via WebSockets:
+    Socket.io integration so that when an admin assigns or updates a
+    protocol, the assigned agent's dashboard updates immediately
+    without a manual refresh.
 
-    models/User.js
-        User schema definition
+Email notifications:
+    Nodemailer integration for deadline reminders, escalation alerts,
+    and new assignment notifications delivered to agent inboxes.
 
-    models/WorkRequest.js
-        Work request schema definition
 
-    middleware/authMiddleware.js
-        JWT verification middleware
+FEATURE ADDITIONS
 
-    middleware/roleMiddleware.js
-        Role-based access control middleware
+File attachments:
+    Allow upload of supporting documents, screenshots, and logs
+    directly to protocol comment threads.
 
-    routes/authRoutes.js
-        Authentication endpoints
+Advanced analytics:
+    Chart.js or Recharts integration showing protocol volume over
+    time, per-agent resolution rates, average time to resolution,
+    and SLA compliance percentages.
 
-    routes/requestRoutes.js
-        Work request CRUD endpoints
+Protocol templates:
+    Pre-filled protocol types such as Security Audit, DB Recovery,
+    and Infrastructure Maintenance to reduce repetitive data entry.
+
+Bulk operations:
+    Multi-select protocols for bulk status changes, bulk agent
+    assignment, or bulk CSV export.
+
+Full audit trail:
+    Immutable, append-only change log recording every field
+    modification with before and after values, timestamp, and
+    acting user identity.
+
+
+TECHNICAL IMPROVEMENTS
+
+React Query / TanStack Query:
+    Replace the manual lastFetched cache with battle-tested server
+    state management including stale-while-revalidate, background
+    refetching, and automatic retry on failure.
+
+End-to-end testing with Playwright:
+    Cover the critical admin workflows (create, assign, escalate,
+    delete) and agent workflows (view, update status, comment) with
+    automated browser tests.
+
+Unit testing with Vitest:
+    Test the Zustand store actions, the escalation engine logic, and
+    the full filter and sort pipeline in isolation.
+
+Progressive Web App:
+    Add a Service Worker for offline capability and a manifest.json
+    for home screen installation on mobile devices.
+
+Formal WCAG 2.1 AA audit:
+    Screen reader testing with NVDA and VoiceOver, axe-core automated
+    scanning, and manual keyboard-only navigation across every view.
+
+---
+
+## CONTRIBUTING
+
+1. Fork the repository
+2. Create a feature branch:   git checkout -b feat/your-feature
+3. Commit using Conventional Commits format
+4. Push to your fork and open a pull request
+
+
+COMMIT FORMAT EXAMPLES
+
+    feat: add bulk status update for admin protocols
+    fix: resolve modal z-index overlap with sidebar
+    docs: update caching strategy in README
+    refactor: extract escalation logic into standalone utility
+    style: align filter dropdown spacing on mobile viewports
 
 ---
 
 TaskFlow Operational Command
 Built with React, TypeScript, Tailwind CSS, Node.js, Express, and MongoDB
 Cyberpunk aesthetic. Production-grade patterns. Zero compromise on UX.
+
+Last Updated: February 2026
