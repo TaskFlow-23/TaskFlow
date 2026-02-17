@@ -1,5 +1,3 @@
-Here is the clean copy-paste version:
-
 ---
 
 # TaskFlow - Operational Command System
