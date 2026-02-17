@@ -221,7 +221,7 @@ export const RequestModal: React.FC<Props> = ({ request: initialRequest, onClose
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-12">
       <div className="absolute inset-0 bg-black/95 backdrop-blur-xl animate-in fade-in duration-300" onClick={onClose}></div>
       <div className="relative bg-deep-black border border-white/10 w-full max-w-6xl h-[90vh] rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl animate-in zoom-in-95 duration-300">
-        {/* Header */}
+        {/* Header - unchanged */}
         <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
           <div className="flex items-center gap-6">
             <div
@@ -260,10 +260,10 @@ export const RequestModal: React.FC<Props> = ({ request: initialRequest, onClose
           </button>
         </div>
 
-        {/* Unified Scrollable Content Area */}
+        {/* Unified Scrollable Content Area - unchanged except delete button position */}
         <div className="flex-1 overflow-y-auto p-10 bg-black/50 custom-scrollbar relative">
           <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-32">
-            {/* Left Column */}
+            {/* Left Column - unchanged */}
             <div className="lg:col-span-7 space-y-10">
               <div className="space-y-8">
                 <div className="space-y-2">
@@ -290,7 +290,7 @@ export const RequestModal: React.FC<Props> = ({ request: initialRequest, onClose
                 </div>
               </div>
 
-              {/* Comments Section */}
+              {/* Comments Section - unchanged */}
               {!isNew && (
                 <div className="space-y-6 pt-10 border-t border-white/5">
                   <div className="flex items-center justify-between px-1">
@@ -406,7 +406,7 @@ export const RequestModal: React.FC<Props> = ({ request: initialRequest, onClose
               )}
             </div>
 
-            {/* Right Column: Meta Controls */}
+            {/* Right Column: Meta Controls - unchanged */}
             <div className="lg:col-span-5 space-y-6">
               <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 space-y-6">
                 <div className="grid grid-cols-1 gap-4">
@@ -505,12 +505,13 @@ export const RequestModal: React.FC<Props> = ({ request: initialRequest, onClose
               )}
             </div>
 
+            {/* Bottom fixed bar - ONLY CHANGE HERE: delete button moved more right */}
             <div className="lg:col-span-12 fixed bottom-0 left-0 right-0 p-8 border-t border-white/5 bg-deep-black/95 backdrop-blur-2xl flex items-center justify-end gap-4 z-50">
               {isAdmin && !isNew && (
                 <button
                   type="button"
                   onClick={handleDeleteFromModal}
-                  className="mr-auto px-6 py-4 text-xs font-black uppercase tracking-[0.2em] text-red-500 hover:bg-red-500/10 rounded-2xl border border-red-500/20 transition-all flex items-center gap-2"
+                  className="ml-auto mr-8 px-6 py-4 text-xs font-black uppercase tracking-[0.2em] text-red-500 hover:bg-red-500/10 rounded-2xl border border-red-500/20 transition-all flex items-center gap-2"  // ← ml-auto + mr-8 pushes it right
                 >
                   <Trash2 size={16} />
                   Scrub Record

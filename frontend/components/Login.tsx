@@ -1,8 +1,13 @@
-
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Role } from '../types';
-import { ShieldCheck, UserCircle, Loader2, Lock, Terminal, Key, User, AlertCircle } from 'lucide-react';
+import { ShieldCheck, UserCircle, Loader2, Lock, Terminal, Key, User, AlertCircle, ChevronDown } from 'lucide-react';
+
+// Valid agent IDs (you can move this to constants.ts if you prefer)
+const AUTHORIZED_AGENTS = [
+  'AGT-101', 'AGT-102', 'AGT-103', 'AGT-104', 'AGT-105',
+  'AGT-106', 'AGT-107', 'AGT-108', 'AGT-109', 'AGT-110'
+];
 
 export const Login: React.FC = () => {
   const login = useStore((state) => state.login);
@@ -10,30 +15,33 @@ export const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState(AUTHORIZED_AGENTS[0]); // Default: AGT-101
+  const [showAgentDropdown, setShowAgentDropdown] = useState(false);
 
   const handleAuthorize = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    // Simulated credential check
-    if (username === 'admin' && password === 'admin') {
-      setSelectedRole(Role.ADMIN);
-      startAuthSequence(Role.ADMIN);
-    } else if (username === 'agent' && password === 'agent') {
-      setSelectedRole(Role.AGENT);
-      startAuthSequence(Role.AGENT);
+    // Debug: log what we're sending
+    console.log('Authorize clicked - Username:', username, 'Password:', password);
+
+    if (username.trim() === 'admin' && password === 'admin') {
+      console.log('Admin login');
+      setIsAuthenticating(true);
+      setTimeout(() => {
+        login(Role.ADMIN, 'Administrator');
+        setIsAuthenticating(false);
+      }, 2200);
+    } else if (username.trim().toLowerCase() === 'agent' && password === 'agent') {
+      console.log('Agent login - Selected agent:', selectedAgent);
+      setIsAuthenticating(true);
+      setTimeout(() => {
+        login(Role.AGENT, selectedAgent);
+        setIsAuthenticating(false);
+      }, 2200);
     } else {
       setError('ACCESS DENIED: Invalid personnel credentials.');
     }
-  };
-
-  const startAuthSequence = (role: Role) => {
-    setIsAuthenticating(true);
-    // Simulate biometric/terminal verification sequence
-    setTimeout(() => {
-      login(role);
-    }, 2200);
   };
 
   return (
@@ -67,7 +75,9 @@ export const Login: React.FC = () => {
               <div className="absolute inset-0 blur-md bg-neon-blue/20 animate-pulse rounded-full"></div>
             </div>
             <h2 className="text-sm font-black uppercase tracking-widest mb-1 text-stark-white">Synchronizing</h2>
-            <p className="text-[10px] text-white/40 mb-8 uppercase tracking-tighter">Establishing Secure Handshake for {selectedRole} Node</p>
+            <p className="text-[10px] text-white/40 mb-8 uppercase tracking-tighter">
+              Establishing Secure Handshake...
+            </p>
             <div className="w-full h-[1px] bg-white/5 rounded-full overflow-hidden">
               <div className="h-full bg-neon-blue shadow-neon animate-[loading_2.2s_linear]"></div>
             </div>
@@ -82,14 +92,13 @@ export const Login: React.FC = () => {
                     <User size={16} />
                   </div>
                   <input
-  type="text"
-  required
-  value={username}
-  onChange={(e) => setUsername(e.target.value)}
-  className="w-full bg-white/5 border border-white/20 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 transition-all"
-  placeholder="Enter ID..."
-/>
-
+                    type="text"
+                    required
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full bg-white/5 border border-white/20 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 transition-all"
+                    placeholder="Enter ID..."
+                  />
                 </div>
               </div>
 
@@ -109,6 +118,46 @@ export const Login: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {/* Agent dropdown - appears only for agent login */}
+              {username.trim().toLowerCase() === 'agent' && (
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-black tracking-widest text-white/40 ml-1">Select Agent ID</label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowAgentDropdown(!showAgentDropdown)}
+                      className="w-full bg-white/5 border border-white/20 rounded-xl py-3 px-4 text-sm text-white flex items-center justify-between focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 transition-all"
+                    >
+                      <span className="font-bold uppercase tracking-wider">{selectedAgent}</span>
+                      <ChevronDown size={16} className={`text-white/40 transition-transform ${showAgentDropdown ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {showAgentDropdown && (
+                      <div className="absolute z-50 top-full mt-2 left-0 right-0 bg-deep-black border border-white/20 rounded-xl shadow-2xl p-2 max-h-60 overflow-y-auto custom-scrollbar">
+                        {AUTHORIZED_AGENTS.map((agent) => (
+                          <button
+                            key={agent}
+                            type="button"
+                            onClick={() => {
+                              setSelectedAgent(agent);
+                              setShowAgentDropdown(false);
+                              console.log('Agent selected:', agent); // Debug
+                            }}
+                            className={`w-full text-left px-4 py-3 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
+                              selectedAgent === agent
+                                ? 'bg-neon-blue/10 text-neon-blue'
+                                : 'text-white/60 hover:bg-white/5 hover:text-white'
+                            }`}
+                          >
+                            {agent}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {error && (
                 <div className="flex items-center gap-2 text-red-500 bg-red-500/10 border border-red-500/20 p-3 rounded-xl animate-in fade-in slide-in-from-top-2">
@@ -140,7 +189,7 @@ export const Login: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="pt-4 text-center">
               <p className="text-[8px] text-white/10 uppercase tracking-[0.3em] leading-loose font-bold">
                 Connection is encrypted via<br/>
@@ -156,8 +205,15 @@ export const Login: React.FC = () => {
           0% { width: 0%; }
           100% { width: 100%; }
         }
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #111;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #00E5FF;
+          border-radius: 3px;
         }
       `}</style>
     </div>

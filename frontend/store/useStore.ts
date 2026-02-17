@@ -1,3 +1,4 @@
+// frontend/store/useStore.ts
 import { create } from 'zustand';
 import { WorkRequest, User, Role, CommentType } from '../types';
 import { CACHE_TIME } from '../constants';
@@ -13,6 +14,7 @@ interface AppState {
   isLoading: boolean;
   error: string | null;
   currentView: AppView;
+  authorizedAgents: string[];
 
   // Actions
   fetchRequests: (force?: boolean) => Promise<void>;
@@ -20,9 +22,13 @@ interface AppState {
   updateRequest: (id: string, updates: Partial<WorkRequest>) => Promise<void>;
   deleteRequest: (id: string) => Promise<void>;
   addComment: (requestId: string, content: string, type: CommentType) => Promise<void>;
-  login: (role: Role) => void;
+  login: (role: Role, agentName?: string) => void;
   logout: () => void;
   setView: (view: AppView) => void;
+  clearError: () => void;
+  // If you still need these (optional)
+  addNewAgent: (agentId: string) => void;
+  getAuthorizedAgents: () => string[];
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -33,6 +39,23 @@ export const useStore = create<AppState>((set, get) => ({
   isLoading: false,
   error: null,
   currentView: 'dashboard',
+  authorizedAgents: [
+    'AGT-101', 'AGT-102', 'AGT-103', 'AGT-104', 'AGT-105',
+    'AGT-106', 'AGT-107', 'AGT-108', 'AGT-109', 'AGT-110'
+  ],
+
+  clearError: () => set({ error: null }),
+
+  getAuthorizedAgents: () => {
+    return get().authorizedAgents;
+  },
+
+  addNewAgent: (agentId: string) => {
+    const current = get().authorizedAgents;
+    if (!current.includes(agentId)) {
+      set({ authorizedAgents: [...current, agentId] });
+    }
+  },
 
   fetchRequests: async (force = false) => {
     const { lastFetched } = get();
@@ -46,17 +69,24 @@ export const useStore = create<AppState>((set, get) => ({
 
     try {
       const data = await apiService.getWorkRequests();
-      set({ requests: data, lastFetched: now, isLoading: false });
+      set({ requests: data, lastFetched: now, isLoading: false, error: null });
     } catch (err: any) {
-      set({ error: err.message, isLoading: false });
+      console.error('Failed to fetch requests:', err);
+      set({ 
+        error: err.message || 'Failed to load operational data.', 
+        isLoading: false 
+      });
     }
   },
 
   createRequest: async (data) => {
     const { currentUser } = get();
-    if (!currentUser) return;
+    if (!currentUser) {
+      set({ error: 'Authentication required.' });
+      throw new Error('Authentication required');
+    }
 
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
 
     try {
       const newRequest = await apiService.createWorkRequest(data, currentUser);
@@ -64,17 +94,23 @@ export const useStore = create<AppState>((set, get) => ({
         requests: [...state.requests, newRequest],
         lastFetched: null,
         isLoading: false,
+        error: null
       }));
     } catch (err: any) {
-      set({ error: err.message, isLoading: false });
+      const errorMsg = err.message || 'Failed to create request.';
+      set({ error: errorMsg, isLoading: false });
+      throw new Error(errorMsg);
     }
   },
 
   updateRequest: async (id, updates) => {
     const { currentUser } = get();
-    if (!currentUser) return;
+    if (!currentUser) {
+      set({ error: 'Authentication required.' });
+      throw new Error('Authentication required');
+    }
 
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
 
     try {
       const updated = await apiService.updateWorkRequest(id, updates, currentUser);
@@ -82,51 +118,84 @@ export const useStore = create<AppState>((set, get) => ({
         requests: state.requests.map((r) => (r.id === id ? updated : r)),
         lastFetched: null,
         isLoading: false,
+        error: null
       }));
     } catch (err: any) {
-      set({ error: err.message, isLoading: false });
-      throw err;
+      const errorMsg = err.message || 'Failed to update request.';
+      set({ error: errorMsg, isLoading: false });
+      throw new Error(errorMsg);
     }
   },
 
   deleteRequest: async (id) => {
     const { currentUser } = get();
-    if (!currentUser || currentUser.role !== Role.ADMIN) {
-      throw new Error('Access Denied: Administrative privileges required.');
+    
+    if (!currentUser) {
+      const error = 'Authentication required.';
+      set({ error });
+      throw new Error(error);
     }
+    
+    if (currentUser.role !== Role.ADMIN) {
+      const error = 'Access Denied: Administrative privileges required.';
+      set({ error });
+      throw new Error(error);
+    }
+
+    set({ isLoading: true, error: null });
 
     try {
       await apiService.deleteWorkRequest(id, currentUser);
       set((state) => ({
         requests: state.requests.filter((r) => r.id !== id),
         lastFetched: null,
+        isLoading: false,
+        error: null
       }));
     } catch (err: any) {
-      set({ error: err.message });
-      throw err;
+      const errorMsg = err.message || 'Failed to delete request.';
+      set({ error: errorMsg, isLoading: false });
+      throw new Error(errorMsg);
     }
   },
 
   addComment: async (requestId: string, content: string, type: CommentType) => {
     const { currentUser } = get();
-    if (!currentUser) return;
+    if (!currentUser) {
+      set({ error: 'Authentication required.' });
+      throw new Error('Authentication required');
+    }
+
+    set({ error: null });
 
     try {
       const updated = await apiService.addComment(requestId, content, type, currentUser);
       set((state) => ({
         requests: state.requests.map((r) => (r.id === requestId ? updated : r)),
+        error: null
       }));
     } catch (err: any) {
-      set({ error: err.message });
+      const errorMsg = err.message || 'Failed to add comment.';
+      set({ error: errorMsg });
+      throw new Error(errorMsg);
     }
   },
 
-  login: (role: Role) => {
+  // FIXED LOGIN ACTION - now properly sets the agent name
+  login: (role: Role, agentName?: string) => {
+    console.log('LOGIN ACTION CALLED - Role:', role, 'Agent:', agentName);
+
     const id = Date.now().toString();
-    const name = role === Role.ADMIN ? 'Administrator' : 'AGT-109';
+    const name = role === Role.ADMIN 
+      ? 'Administrator' 
+      : (agentName || 'Unknown Agent');
+
     set({
       currentUser: { id, name, role },
       isAuthenticated: true,
+      error: null,
+      // No more broken authorizedAgents line
+      // If you need authorizedAgents, it's already in initial state above
     });
   },
 
@@ -137,8 +206,9 @@ export const useStore = create<AppState>((set, get) => ({
       requests: [],
       lastFetched: null,
       currentView: 'dashboard',
+      error: null
     });
   },
 
-  setView: (view: AppView) => set({ currentView: view }),
+  setView: (view: AppView) => set({ currentView: view, error: null }),
 }));
